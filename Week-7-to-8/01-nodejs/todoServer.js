@@ -39,11 +39,82 @@
 
   Testing the server - run `npm run test-todoServer` command in terminal
  */
-  const express = require('express');
-  const bodyParser = require('body-parser');
-  
-  const app = express();
-  
-  app.use(bodyParser.json());
-  
-  module.exports = app;
+const express = require("express");
+const bodyParser = require("body-parser");
+
+const app = express();
+
+app.use(bodyParser.json());
+
+let todos = [];
+let nextId = 1;
+
+// get all todos
+app.get("/todos", (req, res) => {
+  res.status(200).json(todos);
+});
+
+// get todo by id
+app.get("/todos/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  const todo = todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return res.sendStatus(404);
+  }
+
+  res.status(200).json(todo);
+});
+
+// create todo
+app.post("/todos", (req, res) => {
+  const { title, description, completed } = req.body;
+
+  const newTodo = {
+    id: nextId++,
+    title,
+    description,
+    completed: completed || false,
+  };
+
+  todos.push(newTodo);
+
+  res.status(201).json({
+    id: newTodo.id,
+  });
+});
+
+// update todo
+app.put("/todos/:id", (req, res) => {
+  const id = Number(req.params.id);
+
+  const todo = todos.find((todo) => todo.id === id);
+
+  if (!todo) {
+    return res.sendStatus(404);
+  }
+
+  todo.title = req.body.title;
+  todo.description = req.body.description;
+  todo.completed = req.body.completed;
+
+  res.sendStatus(200);
+});
+
+// delete todo
+app.delete("/todos/:id", (req, res) => {
+  const id = parseInt(req.params.id);
+
+  const todoIndex = todos.findIndex((todo) => todo.id === id);
+
+  if (todoIndex === -1) {
+    return res.status(404).send("Todo not found");
+  }
+
+  todos.splice(todoIndex, 1);
+
+  return res.status(200).send("Todo deleted successfully");
+});
+
+module.exports = app;
